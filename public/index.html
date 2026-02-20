@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swipefile — Lean Partners</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◇</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg: #0e0e10;
+      --surface: #1a1a1e;
+      --surface-2: #111114;
+      --border: rgba(255,255,255,0.06);
+      --border-2: rgba(255,255,255,0.1);
+      --text: #e8e8e8;
+      --text-2: #888;
+      --text-3: #555;
+      --meta: #0668E1;
+      --google: #34A853;
+      --tiktok: #FF004F;
+      --linkedin: #0A66C2;
+      --youtube: #FF0000;
+      --other: #8B8B8B;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Setup Screen ─────────────────────────── */
+    .setup-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .setup-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 560px;
+      width: 100%;
+    }
+    .setup-card h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: 32px;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+    .setup-card p { color: var(--text-3); font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
+    .setup-steps {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 2;
+    }
+    .setup-steps strong { color: var(--text); }
+    .setup-steps code {
+      background: rgba(255,255,255,0.06);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* ── Form elements ────────────────────────── */
+    .input-label {
+      font-size: 11px; font-weight: 600; color: var(--text-2);
+      letter-spacing: 0.05em; text-transform: uppercase;
+      display: block; margin-bottom: 6px;
+    }
+    .input {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .input:focus { border-color: rgba(255,255,255,0.25); }
+    .input::placeholder { color: var(--text-3); }
+    select.input { cursor: pointer; }
+    textarea.input { min-height: 70px; resize: vertical; }
+
+    .btn {
+      border: none; border-radius: 8px; padding: 12px 24px;
+      font-size: 14px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-primary { background: #fff; color: #000; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:disabled { background: rgba(255,255,255,0.08); color: var(--text-3); cursor: not-allowed; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border-2);
+      color: var(--text-2);
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+    .btn-danger {
+      background: rgba(255,50,50,0.08);
+      border: 1px solid rgba(255,50,50,0.15);
+      color: #ff4444;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .header { padding: 28px 32px 0; max-width: 1400px; margin: 0 auto; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+    .header h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: 28px; font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+    .header-meta { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sync-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      display: inline-block; margin-right: 4px;
+    }
+    .sync-dot.active { background: #4CAF50; }
+    .sync-dot.syncing { background: #FFC107; animation: pulse 1s infinite; }
+
+    /* ── Filters ──────────────────────────────── */
+    .filters {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      margin-bottom: 24px; padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-wrap { position: relative; flex: 1 1 220px; max-width: 300px; }
+    .search-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); color: var(--text-3); font-size: 14px;
+    }
+    .search-wrap .input { padding-left: 34px; }
+    .platform-filters { display: flex; gap: 4px; flex-wrap: wrap; }
+    .platform-btn {
+      padding: 7px 12px; border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--text-3);
+      font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .platform-btn.active { color: #fff; }
+    .sort-select { margin-left: auto; }
+
+    /* ── Grid ─────────────────────────────────── */
+    .grid-container { padding: 0 32px 40px; max-width: 1400px; margin: 0 auto; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .empty-state { text-align: center; padding: 80px 20px; color: #444; }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+    /* ── Card ─────────────────────────────────── */
+    .card {
+      position: relative; border-radius: 10px; overflow: hidden;
+      cursor: pointer; background: var(--surface);
+      border: 1px solid var(--border);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+    .card-media { position: relative; width: 100%; background: #111; overflow: hidden; }
+    .card-media img, .card-media video {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .card-badge {
+      position: absolute; border-radius: 4px;
+      padding: 3px 8px; font-size: 11px; font-weight: 600;
+      color: #fff; letter-spacing: 0.03em;
+    }
+    .card-badge.platform { top: 10px; left: 10px; }
+    .card-badge.type {
+      top: 10px; right: 10px;
+      background: rgba(0,0,0,0.7); font-weight: 500;
+      backdrop-filter: blur(8px);
+    }
+    .card-badge.drive {
+      bottom: 10px; left: 10px;
+      background: rgba(0,0,0,0.7); color: #4CAF50;
+      backdrop-filter: blur(8px);
+    }
+    .card-delete {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.7); border: none; border-radius: 4px;
+      color: #ff4444; cursor: pointer; padding: 3px 7px;
+      font-size: 11px; font-weight: 600; backdrop-filter: blur(8px);
+      display: none;
+    }
+    .card:hover .card-delete { display: block; }
+    .card:hover .card-badge.type { right: 48px; }
+    .card-info { padding: 12px 14px 14px; }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
+    .card-date { font-size: 11px; color: #666; white-space: nowrap; }
+    .card-client { font-size: 11px; color: var(--text-2); margin-top: 4px; font-weight: 500; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .tag {
+      background: rgba(255,255,255,0.06); border-radius: 4px;
+      padding: 2px 7px; font-size: 10px; color: #999; font-weight: 500;
+    }
+    .card-notes {
+      font-size: 11px; color: #666; margin-top: 8px; line-height: 1.5;
+      border-top: 1px solid rgba(255,255,255,0.04); padding-top: 8px;
+    }
+
+    /* ── Modal ────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; backdrop-filter: blur(4px);
+    }
+    .modal {
+      background: var(--surface-2); border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      max-height: 90vh; overflow: auto;
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; color: #666;
+      cursor: pointer; font-size: 20px; padding: 4px;
+    }
+
+    /* ── Drop zone ────────────────────────────── */
+    .dropzone {
+      border: 2px dashed rgba(255,255,255,0.12); border-radius: 10px;
+      padding: 28px 20px; text-align: center; cursor: pointer;
+      margin-bottom: 20px; transition: all 0.2s;
+    }
+    .dropzone.active { border-color: #fff; background: rgba(255,255,255,0.03); }
+    .dropzone-preview { border: none; padding: 0; overflow: hidden; }
+    .dropzone-preview img, .dropzone-preview video { width: 100%; max-height: 200px; object-fit: cover; }
+
+    /* ── Type / Ratio buttons ─────────────────── */
+    .toggle-group { display: flex; gap: 6px; }
+    .toggle-btn {
+      flex: 1; padding: 8px 0; border-radius: 6px;
+      border: 1px solid var(--border-2); background: transparent;
+      color: #666; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit; text-transform: uppercase;
+      letter-spacing: 0.04em; transition: all 0.15s;
+    }
+    .toggle-btn.active { border-color: #fff; background: rgba(255,255,255,0.08); color: #fff; }
+
+    /* ── Platform selector ────────────────────── */
+    .platform-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+    .platform-opt {
+      padding: 7px 14px; border-radius: 6px;
+      border: 1px solid var(--border-2); background: transparent;
+      color: #666; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+
+    /* ── Detail modal ─────────────────────────── */
+    .detail-modal { width: 90%; max-width: 700px; }
+    .detail-media { position: relative; background: #000; }
+    .detail-media img, .detail-media video { width: 100%; max-height: 50vh; object-fit: contain; }
+
+    /* ── Loading ──────────────────────────────── */
+    .loading-screen {
+      min-height: 100vh; display: flex; align-items: center;
+      justify-content: center; color: #666;
+    }
+
+    /* ── Toast ────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: 10px; padding: 12px 20px;
+      font-size: 13px; font-weight: 500; color: var(--text);
+      z-index: 2000; animation: slideUp 0.3s ease;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+    .toast.error { border-color: rgba(255,50,50,0.3); color: #ff6666; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    @media (max-width: 768px) {
+      .header { padding: 20px 16px 0; }
+      .grid-container { padding: 0 16px 32px; }
+      .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+      .filters { gap: 8px; }
+      .platform-filters { display: none; }
+      .sort-select { margin-left: 0; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════════════════════
+const PLATFORM_COLORS = {
+  Meta: '#0668E1', Google: '#34A853', TikTok: '#FF004F',
+  LinkedIn: '#0A66C2', YouTube: '#FF0000', Other: '#8B8B8B'
+};
+const PLATFORMS = Object.keys(PLATFORM_COLORS);
+const LS_KEY = 'swipefile_api_url';
+
+let state = {
+  apiUrl: localStorage.getItem(LS_KEY) || '',
+  ads: [],
+  loading: true,
+  search: '',
+  filterPlatform: 'All',
+  filterClient: 'All',
+  sortBy: 'newest',
+  syncing: false,
+  modal: null,    // 'add' | 'settings' | 'detail'
+  detailAd: null,
+  editingDetail: false,
+  toast: null,
+};
+
+// ═══════════════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════════════
+async function apiGet() {
+  const res = await fetch(state.apiUrl);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error);
+  return data.ads;
+}
+
+async function apiPost(body) {
+  const res = await fetch(state.apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' }, // Apps Script quirk
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error);
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════
+function showToast(msg, isError = false) {
+  state.toast = { msg, isError };
+  render();
+  setTimeout(() => { state.toast = null; render(); }, 3000);
+}
+
+async function loadAds() {
+  if (!state.apiUrl) { state.loading = false; render(); return; }
+  state.syncing = true; render();
+  try {
+    state.ads = await apiGet();
+    state.loading = false;
+  } catch (e) {
+    showToast('Failed to load: ' + e.message, true);
+    state.loading = false;
+  }
+  state.syncing = false; render();
+}
+
+async function addAd(adData) {
+  try {
+    const res = await apiPost({ action: 'add', ad: adData });
+    state.ads.unshift(res.ad);
+    state.modal = null;
+    showToast('Ad added to swipefile');
+  } catch (e) { showToast('Failed to add: ' + e.message, true); }
+  render();
+}
+
+async function updateAd(id, updates) {
+  try {
+    await apiPost({ action: 'update', id, updates });
+    state.ads = state.ads.map(a => a.id === id ? { ...a, ...updates } : a);
+    if (state.detailAd?.id === id) state.detailAd = { ...state.detailAd, ...updates };
+    state.editingDetail = false;
+    showToast('Ad updated');
+  } catch (e) { showToast('Failed to update: ' + e.message, true); }
+  render();
+}
+
+async function deleteAd(id) {
+  try {
+    await apiPost({ action: 'delete', id });
+    state.ads = state.ads.filter(a => a.id !== id);
+    if (state.detailAd?.id === id) { state.modal = null; state.detailAd = null; }
+    showToast('Ad removed');
+  } catch (e) { showToast('Failed to delete: ' + e.message, true); }
+  render();
+}
+
+async function syncNow() {
+  state.syncing = true; render();
+  try {
+    const ads = await apiGet();
+    const newCount = ads.length - state.ads.length;
+    state.ads = ads;
+    showToast(newCount > 0 ? `Synced — ${newCount} new ad${newCount > 1 ? 's' : ''}` : 'Synced — up to date');
+  } catch (e) { showToast('Sync failed: ' + e.message, true); }
+  state.syncing = false; render();
+}
+
+function saveApiUrl(url) {
+  state.apiUrl = url;
+  localStorage.setItem(LS_KEY, url);
+  state.modal = null;
+  render();
+  if (url) loadAds();
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function formatDate(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function getFilteredAds() {
+  return state.ads
+    .filter(ad => {
+      if (state.filterPlatform !== 'All' && ad.platform !== state.filterPlatform) return false;
+      if (state.filterClient !== 'All' && ad.client !== state.filterClient) return false;
+      if (state.search) {
+        const q = state.search.toLowerCase();
+        return (ad.name || '').toLowerCase().includes(q) ||
+               (ad.client || '').toLowerCase().includes(q) ||
+               (ad.tags || []).some(t => t.toLowerCase().includes(q)) ||
+               (ad.notes || '').toLowerCase().includes(q);
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (state.sortBy === 'newest') return b.addedAt - a.addedAt;
+      if (state.sortBy === 'oldest') return a.addedAt - b.addedAt;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+}
+
+function getClients() {
+  return ['All', ...new Set(state.ads.map(a => a.client).filter(Boolean))];
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function render() {
+  const app = document.getElementById('app');
+  
+  if (!state.apiUrl && !state.modal) {
+    app.innerHTML = renderSetup();
+    bindSetup();
+    return;
+  }
+  
+  if (state.loading) {
+    app.innerHTML = `<div class="loading-screen">Loading swipefile...</div>`;
+    return;
+  }
+
+  const filtered = getFilteredAds();
+  const clients = getClients();
+
+  app.innerHTML = `
+    ${renderHeader(clients)}
+    <div class="grid-container">
+      ${filtered.length === 0 ? renderEmpty() : `<div class="grid">${filtered.map(renderCard).join('')}</div>`}
+    </div>
+    ${state.modal === 'add' ? renderAddModal(clients) : ''}
+    ${state.modal === 'detail' && state.detailAd ? renderDetailModal() : ''}
+    ${state.modal === 'settings' ? renderSettingsModal() : ''}
+    ${state.toast ? `<div class="toast${state.toast.isError ? ' error' : ''}">${state.toast.msg}</div>` : ''}
+  `;
+
+  bindEvents();
+}
+
+function renderSetup() {
+  return `
+    <div class="setup-screen">
+      <div class="setup-card">
+        <h1>SWIPEFILE</h1>
+        <p>Connect your Google Sheet API to get started. Your sheet becomes the database — the whole team can view, add, and tag ads from here.</p>
+        <div class="setup-steps">
+          <strong>Quick setup:</strong><br>
+          1. Create a Google Sheet<br>
+          2. Paste the Apps Script code (Extensions → Apps Script)<br>
+          3. Set your Drive folder ID in the config<br>
+          4. Deploy → New deployment → Web app → Anyone<br>
+          5. Run <code>setupTrigger()</code> to start auto-importing<br>
+          6. Paste the deployment URL below
+        </div>
+        <label class="input-label">Apps Script Web App URL</label>
+        <input id="setup-url" class="input" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom: 16px;">
+        <button id="setup-btn" class="btn btn-primary" style="width: 100%; padding: 14px;">Connect & Launch</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderHeader(clients) {
+  return `
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <h1>SWIPEFILE</h1>
+          <div class="header-meta">
+            <span style="font-size:13px;color:var(--text-3);font-weight:500">${state.ads.length} ad${state.ads.length !== 1 ? 's' : ''}</span>
+            <span style="font-size:11px;color:${state.syncing ? '#FFC107' : '#4CAF50'};font-weight:600">
+              <span class="sync-dot ${state.syncing ? 'syncing' : 'active'}"></span>
+              ${state.syncing ? 'Syncing...' : 'Connected'}
+            </span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="state.modal='settings';render()" style="font-size:13px;padding:10px 18px;">Settings</button>
+          <button class="btn btn-secondary" onclick="syncNow()" ${state.syncing ? 'disabled' : ''} style="font-size:13px;padding:10px 14px;">↻ Sync</button>
+          <button class="btn btn-primary" onclick="state.modal='add';render()" style="font-size:13px;padding:10px 22px;">+ Add Ad</button>
+        </div>
+      </div>
+      <div class="filters">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input class="input" id="search-input" value="${state.search}" placeholder="Search ads, tags, notes..." oninput="state.search=this.value;render()">
+        </div>
+        <div class="platform-filters">
+          ${['All', ...PLATFORMS].map(p => `
+            <button class="platform-btn ${state.filterPlatform === p ? 'active' : ''}"
+              style="${state.filterPlatform === p ? `border-color:${p === 'All' ? '#fff' : PLATFORM_COLORS[p]};color:${p === 'All' ? '#fff' : PLATFORM_COLORS[p]};background:${p === 'All' ? 'rgba(255,255,255,0.08)' : PLATFORM_COLORS[p] + '15'}` : ''}"
+              onclick="state.filterPlatform='${p}';render()">
+              ${p}
+            </button>
+          `).join('')}
+        </div>
+        ${clients.length > 1 ? `
+          <select class="input" style="width:auto;font-size:12px;font-weight:600;padding:7px 12px" onchange="state.filterClient=this.value;render()">
+            ${clients.map(c => `<option value="${c}" ${state.filterClient === c ? 'selected' : ''}>${c === 'All' ? 'All Clients' : c}</option>`).join('')}
+          </select>
+        ` : ''}
+        <select class="input sort-select" style="width:auto;font-size:12px;font-weight:600;padding:7px 12px" onchange="state.sortBy=this.value;render()">
+          <option value="newest" ${state.sortBy === 'newest' ? 'selected' : ''}>Newest First</option>
+          <option value="oldest" ${state.sortBy === 'oldest' ? 'selected' : ''}>Oldest First</option>
+          <option value="name" ${state.sortBy === 'name' ? 'selected' : ''}>A → Z</option>
+        </select>
+      </div>
+    </div>
+  `;
+}
+
+function renderCard(ad) {
+  const color = PLATFORM_COLORS[ad.platform] || PLATFORM_COLORS.Other;
+  const paddingTop = ad.aspectRatio === '9:16' ? '177%' : ad.aspectRatio === '1:1' ? '100%' : '56.25%';
+  const tags = (ad.tags || []);
+  
+  return `
+    <div class="card" data-id="${ad.id}" onclick="openDetail('${ad.id}')">
+      <div class="card-media" style="padding-top:${paddingTop}">
+        ${ad.type === 'video'
+          ? `<video src="${ad.url}" muted loop playsinline onmouseenter="this.play().catch(()=>{})" onmouseleave="this.pause();this.currentTime=0"></video>`
+          : `<img src="${ad.url}" alt="${ad.name}" onerror="this.style.display='none'">`}
+        <span class="card-badge platform" style="background:${color}">${ad.platform}</span>
+        ${ad.type === 'video' ? '<span class="card-badge type">▶ VIDEO</span>' : ''}
+        ${ad.source === 'drive' ? '<span class="card-badge drive">DRIVE</span>' : ''}
+        <button class="card-delete" onclick="event.stopPropagation();deleteAd('${ad.id}')">✕</button>
+      </div>
+      <div class="card-info">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div class="card-title">${ad.name}</div>
+          <div class="card-date">${formatDate(ad.addedAt)}</div>
+        </div>
+        ${ad.client ? `<div class="card-client">${ad.client}</div>` : ''}
+        ${tags.length > 0 ? `<div class="card-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+        ${ad.notes ? `<div class="card-notes">${ad.notes.length > 80 ? ad.notes.substring(0, 80) + '…' : ad.notes}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderEmpty() {
+  if (state.ads.length === 0) {
+    return `
+      <div class="empty-state">
+        <div class="empty-icon">◇</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px">Your swipefile is empty</div>
+        <div style="font-size:13px;color:var(--text-3);max-width:380px;margin:0 auto;line-height:1.6">
+          Drop ads into your Drive folder and they'll auto-import, or click "+ Add Ad" to add manually.
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="empty-state">
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">No ads match your filters</div>
+      <div style="font-size:13px;color:var(--text-3)">Try adjusting your search or filters</div>
+    </div>
+  `;
+}
+
+function renderAddModal(clients) {
+  return `
+    <div class="modal-overlay" onclick="state.modal=null;render()">
+      <div class="modal" style="padding:28px;width:480px" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Add to Swipefile</h2>
+          <button class="modal-close" onclick="state.modal=null;render()">✕</button>
+        </div>
+
+        <div id="dropzone" class="dropzone">
+          <div style="font-size:28px;margin-bottom:8px;opacity:0.3">↑</div>
+          <div style="font-size:13px;color:#666;font-weight:500">Drop image or video here, or click to browse</div>
+          <div style="font-size:11px;color:#555;margin-top:4px">Or paste a URL below</div>
+          <input type="file" id="file-input" accept="image/*,video/*" style="display:none">
+        </div>
+
+        <div style="display:grid;gap:16px">
+          <div>
+            <label class="input-label">Image/Video URL</label>
+            <input class="input" id="add-url" placeholder="https://...">
+          </div>
+          <div>
+            <label class="input-label">Ad Name</label>
+            <input class="input" id="add-name" placeholder="e.g. Fonoa - Tax Compliance Hero">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label class="input-label">Type</label>
+              <div class="toggle-group">
+                <button class="toggle-btn active" data-type="image" onclick="selectToggle(this,'type')">IMAGE</button>
+                <button class="toggle-btn" data-type="video" onclick="selectToggle(this,'type')">VIDEO</button>
+              </div>
+            </div>
+            <div>
+              <label class="input-label">Aspect Ratio</label>
+              <div class="toggle-group">
+                <button class="toggle-btn active" data-ratio="16:9" onclick="selectToggle(this,'ratio')">16:9</button>
+                <button class="toggle-btn" data-ratio="1:1" onclick="selectToggle(this,'ratio')">1:1</button>
+                <button class="toggle-btn" data-ratio="9:16" onclick="selectToggle(this,'ratio')">9:16</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="input-label">Platform</label>
+            <div class="platform-selector" id="platform-selector">
+              ${PLATFORMS.map((p, i) => `
+                <button class="platform-opt ${i === 0 ? 'active' : ''}" data-platform="${p}"
+                  style="${i === 0 ? `border-color:${PLATFORM_COLORS[p]};color:${PLATFORM_COLORS[p]};background:${PLATFORM_COLORS[p]}18` : ''}"
+                  onclick="selectPlatform(this)">${p}</button>
+              `).join('')}
+            </div>
+          </div>
+          <div>
+            <label class="input-label">Client</label>
+            <div style="display:flex;gap:8px">
+              <select class="input" id="add-client" style="flex:1">
+                <option value="">Select client...</option>
+                ${clients.filter(c => c !== 'All').map(c => `<option value="${c}">${c}</option>`).join('')}
+              </select>
+              <input class="input" id="add-new-client" style="flex:1" placeholder="Or add new...">
+            </div>
+          </div>
+          <div>
+            <label class="input-label">Tags (comma-separated)</label>
+            <input class="input" id="add-tags" placeholder="e.g. UGC, testimonial, hook">
+          </div>
+          <div>
+            <label class="input-label">Notes</label>
+            <textarea class="input" id="add-notes" placeholder="Why is this ad worth saving? What's the insight?"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:24px;padding:13px 0" onclick="submitAdd()">Add to Swipefile</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderDetailModal() {
+  const ad = state.detailAd;
+  const color = PLATFORM_COLORS[ad.platform] || PLATFORM_COLORS.Other;
+  const tags = ad.tags || [];
+
+  return `
+    <div class="modal-overlay" onclick="state.modal=null;state.detailAd=null;state.editingDetail=false;render()">
+      <div class="modal detail-modal" onclick="event.stopPropagation()">
+        <div class="detail-media">
+          ${ad.type === 'video'
+            ? `<video src="${ad.url}" controls style="width:100%;max-height:50vh;object-fit:contain"></video>`
+            : `<img src="${ad.url}" alt="${ad.name}" style="width:100%;max-height:50vh;object-fit:contain">`}
+          <button class="modal-close" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);border-radius:6px;padding:6px 10px;font-size:14px;backdrop-filter:blur(8px);color:#fff"
+            onclick="state.modal=null;state.detailAd=null;state.editingDetail=false;render()">✕</button>
+        </div>
+        <div style="padding:20px 24px 24px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <h3 style="font-size:18px;font-weight:700">${ad.name}</h3>
+              <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
+                <span style="background:${color};border-radius:4px;padding:2px 8px;font-size:11px;color:#fff;font-weight:600">${ad.platform}</span>
+                ${ad.client ? `<span style="font-size:12px;color:var(--text-2)">${ad.client}</span>` : ''}
+                <span style="font-size:12px;color:var(--text-3)">${formatDate(ad.addedAt)}</span>
+                ${ad.source === 'drive' ? '<span style="font-size:11px;color:#4CAF50;font-weight:600">DRIVE SYNC</span>' : ''}
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="state.editingDetail=!state.editingDetail;render()">
+                ${state.editingDetail ? 'Cancel' : 'Edit'}
+              </button>
+              <button class="btn btn-danger" style="padding:6px 14px;font-size:12px" onclick="deleteAd('${ad.id}')">Delete</button>
+            </div>
+          </div>
+          ${state.editingDetail ? `
+            <div style="margin-top:16px">
+              <label class="input-label">Tags</label>
+              <input class="input" id="edit-tags" value="${tags.join(', ')}">
+              <label class="input-label" style="margin-top:12px">Notes</label>
+              <textarea class="input" id="edit-notes">${ad.notes || ''}</textarea>
+              <button class="btn btn-primary" style="margin-top:12px;padding:9px 24px;font-size:13px" onclick="submitEdit('${ad.id}')">Save</button>
+            </div>
+          ` : `
+            ${tags.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">${tags.map(t => `<span class="tag" style="padding:4px 10px;font-size:12px">${t}</span>`).join('')}</div>` : ''}
+            ${ad.notes ? `<p style="font-size:13px;color:var(--text-2);margin-top:14px;line-height:1.7;border-top:1px solid var(--border);padding-top:14px">${ad.notes}</p>` : ''}
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSettingsModal() {
+  return `
+    <div class="modal-overlay" onclick="state.modal=null;render()">
+      <div class="modal" style="padding:28px;width:520px" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button class="modal-close" onclick="state.modal=null;render()">✕</button>
+        </div>
+        <label class="input-label">Apps Script Web App URL</label>
+        <input class="input" id="settings-url" value="${state.apiUrl}" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom:20px">
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" style="flex:1" onclick="saveApiUrl(document.getElementById('settings-url').value)">Save</button>
+          <button class="btn btn-danger" style="padding:12px 20px;font-size:13px" onclick="saveApiUrl('');state.ads=[];render()">Disconnect</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════════════════════════════
+function bindSetup() {
+  document.getElementById('setup-btn')?.addEventListener('click', () => {
+    const url = document.getElementById('setup-url').value.trim();
+    if (url) saveApiUrl(url);
+  });
+}
+
+function bindEvents() {
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+
+  if (dropzone && fileInput) {
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('active'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('active'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault(); dropzone.classList.remove('active');
+      handleFileSelect(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+  }
+
+  // Restore search focus
+  const searchInput = document.getElementById('search-input');
+  if (searchInput && document.activeElement?.id === 'search-input') {
+    searchInput.focus();
+    searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+  }
+}
+
+function handleFileSelect(file) {
+  if (!file) return;
+  const isVideo = file.type.startsWith('video/');
+  const nameInput = document.getElementById('add-name');
+  const urlInput = document.getElementById('add-url');
+  
+  if (nameInput && !nameInput.value) {
+    nameInput.value = file.name.replace(/\.[^/.]+$/, '');
+  }
+
+  // Set type toggle
+  document.querySelectorAll('[data-type]').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === (isVideo ? 'video' : 'image'));
+  });
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    if (urlInput) urlInput.value = e.target.result;
+    const dropzone = document.getElementById('dropzone');
+    if (dropzone) {
+      dropzone.className = 'dropzone dropzone-preview';
+      dropzone.innerHTML = isVideo
+        ? `<video src="${e.target.result}" style="width:100%;max-height:200px;object-fit:cover" muted></video>`
+        : `<img src="${e.target.result}" style="width:100%;max-height:200px;object-fit:cover">`;
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function selectToggle(btn, group) {
+  const attr = group === 'type' ? 'data-type' : 'data-ratio';
+  btn.parentElement.querySelectorAll(`.toggle-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function selectPlatform(btn) {
+  document.querySelectorAll('.platform-opt').forEach(b => {
+    b.classList.remove('active');
+    b.style.borderColor = ''; b.style.color = ''; b.style.background = '';
+  });
+  btn.classList.add('active');
+  const p = btn.dataset.platform;
+  const c = PLATFORM_COLORS[p];
+  btn.style.borderColor = c; btn.style.color = c; btn.style.background = c + '18';
+}
+
+function openDetail(id) {
+  state.detailAd = state.ads.find(a => a.id === id);
+  state.modal = 'detail';
+  state.editingDetail = false;
+  render();
+}
+
+function submitAdd() {
+  const url = document.getElementById('add-url')?.value.trim();
+  const name = document.getElementById('add-name')?.value.trim();
+  if (!url || !name) return showToast('Name and URL are required', true);
+
+  const activeType = document.querySelector('[data-type].active')?.dataset.type || 'image';
+  const activeRatio = document.querySelector('[data-ratio].active')?.dataset.ratio || '16:9';
+  const activePlatform = document.querySelector('.platform-opt.active')?.dataset.platform || 'Meta';
+  const client = document.getElementById('add-new-client')?.value.trim() || document.getElementById('add-client')?.value || '';
+  const tags = (document.getElementById('add-tags')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
+  const notes = document.getElementById('add-notes')?.value.trim() || '';
+
+  addAd({ name, url, type: activeType, platform: activePlatform, client, tags, notes, aspectRatio: activeRatio });
+}
+
+function submitEdit(id) {
+  const tags = (document.getElementById('edit-tags')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
+  const notes = document.getElementById('edit-notes')?.value.trim() || '';
+  updateAd(id, { tags, notes });
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+render();
+if (state.apiUrl) loadAds();
+</script>
+</body>
+</html>
