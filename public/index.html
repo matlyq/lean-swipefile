@@ -52,7 +52,7 @@
     .card { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; background: var(--surface); border: 1px solid var(--border); transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
     .card-media { position: relative; width: 100%; background: #111; overflow: hidden; }
-    .card-media img, .card-media video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+    .card-media img, .card-media video, .card-media iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border: none; }
     .card-badge { position: absolute; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #fff; letter-spacing: 0.03em; }
     .card-badge.platform { top: 10px; left: 10px; }
     .card-badge.type { top: 10px; right: 10px; background: rgba(0,0,0,0.7); font-weight: 500; backdrop-filter: blur(8px); }
@@ -185,7 +185,14 @@ async function loadAds() {
       aspectRatio: row.aspectRatio || '16:9',
       addedAt: row.addedAt ? new Date(row.addedAt).getTime() : Date.now(),
       source: row.source || 'manual'
-    }));
+    })).map(ad => {
+      // Convert old Drive video URLs to preview format
+      if (ad.type === 'video' && ad.url.includes('drive.google.com/uc?export=download&id=')) {
+        const fileId = ad.url.split('id=')[1];
+        ad.url = 'https://drive.google.com/file/d/' + fileId + '/preview';
+      }
+      return ad;
+    });
     state.loading = false;
     showToast(state.ads.length + ' ads loaded');
   } catch (e) {
@@ -350,7 +357,7 @@ function renderCard(ad) {
     <div class="card" onclick="openDetail('${ad.id}')">
       <div class="card-media" style="padding-top:${pt}">
         ${ad.type === 'video'
-          ? '<video src="' + ad.url + '" muted loop playsinline onmouseenter="this.play().catch(function(){})" onmouseleave="this.pause();this.currentTime=0"></video>'
+          ? '' + (ad.url.includes('/preview') ? '<iframe src="' + ad.url + '" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allow="autoplay" loading="lazy"></iframe>' : '<video src="' + ad.url + '" muted loop playsinline onmouseenter="this.play().catch(function(){})" onmouseleave="this.pause();this.currentTime=0"></video>') + ''
           : '<img src="' + ad.url + '" alt="' + ad.name + '" onerror="this.style.display=\'none\'">'}
         <span class="card-badge platform" style="background:${color}">${ad.platform}</span>
         ${ad.type === 'video' ? '<span class="card-badge type">▶ VIDEO</span>' : ''}
@@ -418,7 +425,7 @@ function renderDetailModal() {
       <div class="modal" style="width:90%;max-width:700px" onclick="event.stopPropagation()">
         <div style="position:relative;background:#000">
           ${ad.type === 'video'
-            ? '<video src="' + ad.url + '" controls style="width:100%;max-height:50vh;object-fit:contain"></video>'
+            ? '' + (ad.url.includes('/preview') ? '<iframe src="' + ad.url + '" style="width:100%;height:50vh;border:none" allow="autoplay; encrypted-media" allowfullscreen></iframe>' : '<video src="' + ad.url + '" controls style="width:100%;max-height:50vh;object-fit:contain"></video>') + ''
             : '<img src="' + ad.url + '" style="width:100%;max-height:50vh;object-fit:contain" alt="' + ad.name + '">'}
           <button class="modal-close" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);border-radius:6px;padding:6px 10px;font-size:14px;backdrop-filter:blur(8px);color:#fff" onclick="state.modal=null;state.detailAd=null;state.editingDetail=false;render()">✕</button>
         </div>
