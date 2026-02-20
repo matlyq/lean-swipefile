@@ -107,18 +107,20 @@
     .stat-card .stat-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
     .stat-card .stat-value { font-size: 28px; font-weight: 700; color: var(--text); font-family: 'Space Mono', monospace; }
     .stat-card .stat-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
-    .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+    .chart-container { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; position: relative; overflow: hidden; }
     .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 20px; }
     .chart-wrap { position: relative; width: 100%; overflow-x: auto; }
-    .chart-bars { display: flex; align-items: flex-end; gap: 4px; min-height: 260px; padding-top: 20px; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 6px; min-height: 260px; padding-top: 20px; position: relative; z-index: 1; }
     .chart-bar-group { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 36px; }
-    .chart-bar { width: 100%; max-width: 48px; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.08) 100%); transition: background 0.2s; position: relative; min-height: 2px; }
-    .chart-bar:hover { background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 100%); }
-    .chart-bar-value { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .chart-bar { width: 100%; max-width: 48px; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #6C63FF 0%, #4338CA 100%); transition: all 0.2s; position: relative; min-height: 2px; opacity: 0.85; }
+    .chart-bar:hover { opacity: 1; transform: scaleY(1.02); transform-origin: bottom; }
+    .chart-bar.empty { background: rgba(255,255,255,0.03); opacity: 1; }
+    .chart-bar-value { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: #6C63FF; white-space: nowrap; }
     .chart-bar-label { font-size: 10px; color: var(--text-3); margin-top: 8px; font-weight: 600; text-align: center; white-space: nowrap; }
     .chart-grid { position: absolute; top: 20px; left: 0; right: 0; bottom: 24px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
     .chart-grid-line { border-top: 1px solid rgba(255,255,255,0.04); position: relative; }
     .chart-grid-label { position: absolute; left: -4px; top: -8px; font-size: 9px; color: var(--text-3); transform: translateX(-100%); padding-right: 8px; }
+    .trend-line { position: absolute; top: 20px; left: 0; right: 0; bottom: 24px; z-index: 2; pointer-events: none; }
 
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -298,26 +300,39 @@ function getAnalyticsData() {
   filtered.forEach(function(ad) {
     if (!seen[ad.creativeKey]) { seen[ad.creativeKey] = true; uniqueAds.push(ad); }
   });
-  var months = {};
+  var monthCounts = {};
   uniqueAds.forEach(function(ad) {
     var d = new Date(ad.addedAt);
     var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-    if (!months[key]) months[key] = { count: 0 };
-    months[key].count++;
+    if (!monthCounts[key]) monthCounts[key] = 0;
+    monthCounts[key]++;
   });
-  var sorted = Object.keys(months).sort();
-  var biMonthly = sorted.length > 18;
+  // Find earliest and latest month WITH data, fill in between
+  var dataKeys = Object.keys(monthCounts).sort();
+  var allMonths = [];
+  if (dataKeys.length > 0) {
+    var firstParts = dataKeys[0].split('-');
+    var lastParts = dataKeys[dataKeys.length - 1].split('-');
+    var y = parseInt(firstParts[0]), m = parseInt(firstParts[1]) - 1;
+    var endY = parseInt(lastParts[0]), endM = parseInt(lastParts[1]) - 1;
+    while (y < endY || (y === endY && m <= endM)) {
+      var key = y + '-' + String(m + 1).padStart(2, '0');
+      allMonths.push({ key: key, count: monthCounts[key] || 0 });
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
+  }
   var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  sorted.forEach(function(key, i) {
-    var parts = key.split('-');
+  var showEveryOther = allMonths.length > 24;
+  allMonths.forEach(function(item, i) {
+    var parts = item.key.split('-');
     var mo = parseInt(parts[1]) - 1;
-    months[key].label = (biMonthly && i % 2 !== 0) ? '' : monthNames[mo] + ' ' + parts[0].slice(2);
+    item.label = (showEveryOther && i % 2 !== 0) ? '' : monthNames[mo] + ' ' + parts[0];
   });
-  // Count by type
   var videoCount = uniqueAds.filter(function(a) { return a.type === 'video'; }).length;
   var imageCount = uniqueAds.filter(function(a) { return a.type === 'image'; }).length;
   return {
-    months: sorted.map(function(k) { return { key: k, count: months[k].count, label: months[k].label }; }),
+    months: allMonths,
     totalUnique: uniqueAds.length, totalRaw: filtered.length,
     totalClients: [...new Set(uniqueAds.map(function(a) { return a.client; }).filter(Boolean))].length,
     totalVerticals: [...new Set(uniqueAds.map(function(a) { return a.vertical; }).filter(function(v) { return v && v !== 'Other'; }))].length,
@@ -475,12 +490,21 @@ function renderAnalytics(clients, verticals) {
             return '<div class="chart-grid-line"><span class="chart-grid-label">' + val + '</span></div>';
           }).join('') +
         '</div>' +
+        // Trend line SVG
+        (data.months.length > 1 ? (function() {
+          var pts = data.months.map(function(m, i) {
+            var x = ((i + 0.5) / data.months.length) * 100;
+            var y = 100 - ((m.count / maxCount) * 100);
+            return x + ',' + y;
+          }).join(' ');
+          return '<svg class="trend-line" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6C63FF" stop-opacity="0.15"/><stop offset="100%" stop-color="#6C63FF" stop-opacity="0"/></linearGradient></defs><polyline points="' + pts + '" fill="none" stroke="#6C63FF" stroke-width="0.4" stroke-opacity="0.6" stroke-linecap="round" stroke-linejoin="round"/><polygon points="0,100 ' + pts + ' 100,100" fill="url(#trendGrad)"/></svg>';
+        })() : '') +
         '<div class="chart-bars" style="height:' + chartHeight + 'px">' +
           (data.months.length === 0
             ? '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:13px">No data in this range</div>'
             : data.months.map(function(m) {
-                var h = Math.max(2, (m.count / maxCount) * chartHeight);
-                return '<div class="chart-bar-group"><div class="chart-bar" style="height:' + h + 'px">' +
+                var h = m.count > 0 ? Math.max(4, (m.count / maxCount) * chartHeight) : 3;
+                return '<div class="chart-bar-group"><div class="chart-bar' + (m.count === 0 ? ' empty' : '') + '" style="height:' + h + 'px">' +
                   (m.count > 0 ? '<span class="chart-bar-value">' + m.count + '</span>' : '') +
                   '</div><div class="chart-bar-label">' + m.label + '</div></div>';
               }).join('')
