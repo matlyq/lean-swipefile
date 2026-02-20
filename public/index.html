@@ -307,21 +307,9 @@ function getAnalyticsData() {
     if (!monthCounts[key]) monthCounts[key] = 0;
     monthCounts[key]++;
   });
-  // Find earliest and latest month WITH data, fill in between
+  // Only show months that have data - no gap filling
   var dataKeys = Object.keys(monthCounts).sort();
-  var allMonths = [];
-  if (dataKeys.length > 0) {
-    var firstParts = dataKeys[0].split('-');
-    var lastParts = dataKeys[dataKeys.length - 1].split('-');
-    var y = parseInt(firstParts[0]), m = parseInt(firstParts[1]) - 1;
-    var endY = parseInt(lastParts[0]), endM = parseInt(lastParts[1]) - 1;
-    while (y < endY || (y === endY && m <= endM)) {
-      var key = y + '-' + String(m + 1).padStart(2, '0');
-      allMonths.push({ key: key, count: monthCounts[key] || 0 });
-      m++;
-      if (m > 11) { m = 0; y++; }
-    }
-  }
+  var allMonths = dataKeys.map(function(key) { return { key: key, count: monthCounts[key] }; });
   var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var showEveryOther = allMonths.length > 24;
   allMonths.forEach(function(item, i) {
@@ -490,22 +478,13 @@ function renderAnalytics(clients, verticals) {
             return '<div class="chart-grid-line"><span class="chart-grid-label">' + val + '</span></div>';
           }).join('') +
         '</div>' +
-        // Trend line SVG
-        (data.months.length > 1 ? (function() {
-          var pts = data.months.map(function(m, i) {
-            var x = ((i + 0.5) / data.months.length) * 100;
-            var y = 100 - ((m.count / maxCount) * 100);
-            return x + ',' + y;
-          }).join(' ');
-          return '<svg class="trend-line" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6C63FF" stop-opacity="0.15"/><stop offset="100%" stop-color="#6C63FF" stop-opacity="0"/></linearGradient></defs><polyline points="' + pts + '" fill="none" stroke="#6C63FF" stroke-width="0.4" stroke-opacity="0.6" stroke-linecap="round" stroke-linejoin="round"/><polygon points="0,100 ' + pts + ' 100,100" fill="url(#trendGrad)"/></svg>';
-        })() : '') +
         '<div class="chart-bars" style="height:' + chartHeight + 'px">' +
           (data.months.length === 0
             ? '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-3);font-size:13px">No data in this range</div>'
             : data.months.map(function(m) {
-                var h = m.count > 0 ? Math.max(4, (m.count / maxCount) * chartHeight) : 3;
-                return '<div class="chart-bar-group"><div class="chart-bar' + (m.count === 0 ? ' empty' : '') + '" style="height:' + h + 'px">' +
-                  (m.count > 0 ? '<span class="chart-bar-value">' + m.count + '</span>' : '') +
+                var h = Math.max(4, (m.count / maxCount) * chartHeight);
+                return '<div class="chart-bar-group"><div class="chart-bar" style="height:' + h + 'px">' +
+                  '<span class="chart-bar-value">' + m.count + '</span>' +
                   '</div><div class="chart-bar-label">' + m.label + '</div></div>';
               }).join('')
           ) +
