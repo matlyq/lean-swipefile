@@ -37,14 +37,20 @@
     .sync-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
     .sync-dot.active { background: #4CAF50; }
     .sync-dot.syncing { background: #FFC107; animation: pulse 1s infinite; }
+    .logo-wrap { display: flex; align-items: center; gap: 14px; }
+    .logo-wrap img { height: 32px; opacity: 0.9; }
 
     .filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
     .search-wrap { position: relative; flex: 1 1 220px; max-width: 300px; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 14px; }
     .search-wrap .input { padding-left: 34px; }
-    .platform-filters { display: flex; gap: 4px; flex-wrap: wrap; }
-    .platform-btn { padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-3); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-    .platform-btn.active { color: #fff; }
+    .filter-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+    .filter-pill { padding: 7px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-3); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .filter-pill.active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.08); }
+    .date-input { background: var(--surface); border: 1px solid var(--border-2); border-radius: 6px; padding: 7px 12px; color: var(--text); font-size: 12px; font-weight: 600; font-family: inherit; outline: none; cursor: pointer; }
+    .date-input::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+    .date-clear { padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,50,50,0.2); background: transparent; color: #ff6666; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .date-clear:hover { background: rgba(255,50,50,0.08); }
 
     .grid-container { padding: 0 32px 40px; max-width: 1400px; margin: 0 auto; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
@@ -54,7 +60,7 @@
     .card-media { position: relative; width: 100%; background: #111; overflow: hidden; }
     .card-media img, .card-media video, .card-media iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border: none; }
     .card-badge { position: absolute; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 600; color: #fff; letter-spacing: 0.03em; }
-    .card-badge.platform { top: 10px; left: 10px; }
+    .card-badge.format { top: 10px; left: 10px; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
     .card-badge.type { top: 10px; right: 10px; background: rgba(0,0,0,0.7); font-weight: 500; backdrop-filter: blur(8px); }
     .card-badge.drive { bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); color: #4CAF50; backdrop-filter: blur(8px); }
     .card-delete { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); border: none; border-radius: 4px; color: #ff4444; cursor: pointer; padding: 3px 7px; font-size: 11px; font-weight: 600; backdrop-filter: blur(8px); display: none; }
@@ -81,9 +87,6 @@
     .toggle-btn { flex: 1; padding: 8px 0; border-radius: 6px; border: 1px solid var(--border-2); background: transparent; color: #666; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; text-transform: uppercase; letter-spacing: 0.04em; transition: all 0.15s; }
     .toggle-btn.active { border-color: #fff; background: rgba(255,255,255,0.08); color: #fff; }
 
-    .platform-selector { display: flex; gap: 6px; flex-wrap: wrap; }
-    .platform-opt { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border-2); background: transparent; color: #666; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-
     .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 10px; padding: 12px 20px; font-size: 13px; font-weight: 500; color: var(--text); z-index: 2000; animation: slideUp 0.3s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
     .toast.error { border-color: rgba(255,50,50,0.3); color: #ff6666; }
 
@@ -96,33 +99,34 @@
       .header { padding: 20px 16px 0; }
       .grid-container { padding: 0 16px 32px; }
       .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-      .platform-filters { display: none; }
+      .filter-pills { display: none; }
       .header-actions { width: 100%; }
       .header-actions .btn { flex: 1; text-align: center; }
+      .logo-wrap img { height: 24px; }
     }
   </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-// ═══════════════════════════════════════════════════════════
-// CONFIG — PRE-FILLED FOR LEAN PARTNERS
-// ═══════════════════════════════════════════════════════════
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSPITljlPNJ4Uc12pcuh_2X7i33UhK0gRaE0okl30kZkmGK6ug3b0RksGWxKvGnWjOWR1IXlQ2uuWIZ/pub?gid=1065982353&single=true&output=csv";
 const API_URL = "https://script.google.com/a/macros/lean.partners/s/AKfycbxVhi898vi16X3M8faR5fUixiVSCjkWl5o3zwhKi9rAh7puIwtKxtXHTmF5KXhA8biXfw/exec";
+const LOGO_URL = "https://lean.partners/wp-content/uploads/2024/09/cropped-Lean-Logo_2024_250px-1-1.png";
 
-const PLATFORM_COLORS = {
-  Meta: '#0668E1', Google: '#34A853', TikTok: '#FF004F',
-  LinkedIn: '#0A66C2', YouTube: '#FF0000', Other: '#8B8B8B'
+const FORMATS = {
+  'All': { label: 'All Formats', ratio: null },
+  'square': { label: 'Square (1080×1080)', ratio: '1:1' },
+  'portrait': { label: 'Portrait (1080×1350)', ratio: '4:5' },
+  'vertical': { label: 'Vertical (1080×1920)', ratio: '9:16' },
 };
-const PLATFORMS = Object.keys(PLATFORM_COLORS);
 
 let state = {
   ads: [],
   loading: true,
   search: '',
-  filterPlatform: 'All',
+  filterFormat: 'All',
   filterClient: 'All',
+  filterDate: '',
   sortBy: 'newest',
   syncing: false,
   modal: null,
@@ -147,46 +151,55 @@ function parseCSV(text) {
 }
 
 function parseCSVLine(line) {
-  const values = [];
-  let current = '';
-  let inQuotes = false;
+  const values = []; let current = ''; let inQuotes = false;
   for (let i = 0; i < line.length; i++) {
-    if (line[i] === '"') {
-      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-      else { inQuotes = !inQuotes; }
-    } else if (line[i] === ',' && !inQuotes) {
-      values.push(current); current = '';
-    } else {
-      current += line[i];
-    }
+    if (line[i] === '"') { if (inQuotes && line[i + 1] === '"') { current += '"'; i++; } else { inQuotes = !inQuotes; } }
+    else if (line[i] === ',' && !inQuotes) { values.push(current); current = ''; }
+    else { current += line[i]; }
   }
-  values.push(current);
-  return values;
+  values.push(current); return values;
 }
 
 // ═══════════════════════════════════════════════════════════
-// DATA OPERATIONS
+// DATA
 // ═══════════════════════════════════════════════════════════
+function detectFormat(name) {
+  const n = name.toLowerCase();
+  if (n.includes('1080x1080') || n.includes('1:1') || n.includes('square')) return 'square';
+  if (n.includes('1080x1350') || n.includes('4x5') || n.includes('4:5') || n.includes('portrait')) return 'portrait';
+  if (n.includes('1080x1920') || n.includes('9x16') || n.includes('9:16') || n.includes('vertical') || n.includes('1920')) return 'vertical';
+  return 'square'; // default
+}
+
+function formatToAspect(format) {
+  if (format === 'square') return '1:1';
+  if (format === 'portrait') return '4:5';
+  if (format === 'vertical') return '9:16';
+  return '16:9';
+}
+
 async function loadAds() {
   state.syncing = true; render();
   try {
     const res = await fetch(CSV_URL + '&t=' + Date.now());
     const text = await res.text();
     const rows = parseCSV(text);
-    state.ads = rows.map(row => ({
-      id: row.id || '',
-      name: row.name || 'Untitled',
-      url: row.url || '',
-      type: row.type || 'image',
-      platform: row.platform || 'Other',
-      client: row.client || '',
-      tags: row.tags ? row.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-      notes: row.notes || '',
-      aspectRatio: row.aspectRatio || '16:9',
-      addedAt: row.addedAt ? new Date(row.addedAt).getTime() : Date.now(),
-      source: row.source || 'manual'
-    })).map(ad => {
-      // Convert old Drive video URLs to preview format
+    state.ads = rows.map(row => {
+      const format = detectFormat(row.name || '');
+      return {
+        id: row.id || '',
+        name: row.name || 'Untitled',
+        url: row.url || '',
+        type: row.type || 'image',
+        format: format,
+        aspectRatio: formatToAspect(format),
+        client: row.client || '',
+        tags: row.tags ? row.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        notes: row.notes || '',
+        addedAt: row.addedAt ? new Date(row.addedAt).getTime() : Date.now(),
+        source: row.source || 'manual'
+      };
+    }).map(ad => {
       if (ad.type === 'video' && ad.url.includes('drive.google.com/uc?export=download&id=')) {
         const fileId = ad.url.split('id=')[1];
         ad.url = 'https://drive.google.com/file/d/' + fileId + '/preview';
@@ -204,38 +217,18 @@ async function loadAds() {
 
 async function writeToApi(body) {
   try {
-    await fetch(API_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(body),
-    });
-    // Wait for sheet to update, then reload
+    await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
     showToast('Saving...');
     setTimeout(() => loadAds(), 2500);
-  } catch (e) {
-    showToast('Error: ' + e.message, true);
-  }
+  } catch (e) { showToast('Error: ' + e.message, true); }
 }
 
-async function addAd(adData) {
-  await writeToApi({ action: 'add', ad: adData });
-  state.modal = null;
-  render();
-}
-
-async function updateAd(id, updates) {
-  await writeToApi({ action: 'update', id, updates });
-  state.editingDetail = false;
-  render();
-}
-
+async function addAd(adData) { await writeToApi({ action: 'add', ad: adData }); state.modal = null; render(); }
+async function updateAd(id, updates) { await writeToApi({ action: 'update', id, updates }); state.editingDetail = false; render(); }
 async function deleteAd(id) {
   if (state.detailAd?.id === id) { state.modal = null; state.detailAd = null; }
   await writeToApi({ action: 'delete', id });
-  // Remove locally immediately
-  state.ads = state.ads.filter(a => a.id !== id);
-  render();
+  state.ads = state.ads.filter(a => a.id !== id); render();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -250,11 +243,17 @@ function formatDate(ts) {
   return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function toDateStr(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 function getFilteredAds() {
   return state.ads
     .filter(ad => {
-      if (state.filterPlatform !== 'All' && ad.platform !== state.filterPlatform) return false;
+      if (state.filterFormat !== 'All' && ad.format !== state.filterFormat) return false;
       if (state.filterClient !== 'All' && ad.client !== state.filterClient) return false;
+      if (state.filterDate && toDateStr(ad.addedAt) !== state.filterDate) return false;
       if (state.search) {
         const q = state.search.toLowerCase();
         return (ad.name || '').toLowerCase().includes(q) ||
@@ -271,8 +270,13 @@ function getFilteredAds() {
     });
 }
 
-function getClients() {
-  return ['All', ...new Set(state.ads.map(a => a.client).filter(Boolean))];
+function getClients() { return ['All', ...new Set(state.ads.map(a => a.client).filter(Boolean))]; }
+
+function getFormatLabel(f) {
+  if (f === 'square') return 'Square';
+  if (f === 'portrait') return 'Portrait';
+  if (f === 'vertical') return 'Vertical';
+  return f;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -280,101 +284,95 @@ function getClients() {
 // ═══════════════════════════════════════════════════════════
 function render() {
   const app = document.getElementById('app');
-
-  if (state.loading) {
-    app.innerHTML = '<div class="loading-screen">Loading swipefile...</div>';
-    return;
-  }
-
+  if (state.loading) { app.innerHTML = '<div class="loading-screen">Loading swipefile...</div>'; return; }
   const filtered = getFilteredAds();
   const clients = getClients();
-
-  app.innerHTML = `
-    ${renderHeader(clients)}
-    <div class="grid-container">
-      ${filtered.length === 0 ? renderEmpty() : '<div class="grid">' + filtered.map(renderCard).join('') + '</div>'}
-    </div>
-    ${state.modal === 'add' ? renderAddModal(clients) : ''}
-    ${state.modal === 'detail' && state.detailAd ? renderDetailModal() : ''}
-    ${state.toast ? '<div class="toast' + (state.toast.isError ? ' error' : '') + '">' + state.toast.msg + '</div>' : ''}
-  `;
+  app.innerHTML =
+    renderHeader(clients) +
+    '<div class="grid-container">' +
+      (filtered.length === 0 ? renderEmpty() : '<div class="grid">' + filtered.map(renderCard).join('') + '</div>') +
+    '</div>' +
+    (state.modal === 'add' ? renderAddModal(clients) : '') +
+    (state.modal === 'detail' && state.detailAd ? renderDetailModal() : '') +
+    (state.toast ? '<div class="toast' + (state.toast.isError ? ' error' : '') + '">' + state.toast.msg + '</div>' : '');
   bindEvents();
 }
 
 function renderHeader(clients) {
-  return `
-    <div class="header">
-      <div class="header-top">
-        <div>
-          <h1>SWIPEFILE</h1>
-          <div style="display:flex;gap:12px;align-items:center;margin-top:4px">
-            <span style="font-size:13px;color:var(--text-3);font-weight:500">${state.ads.length} ad${state.ads.length !== 1 ? 's' : ''}</span>
-            <span style="font-size:11px;color:${state.syncing ? '#FFC107' : '#4CAF50'};font-weight:600">
-              <span class="sync-dot ${state.syncing ? 'syncing' : 'active'}"></span>
-              ${state.syncing ? 'Syncing...' : 'Connected'}
-            </span>
-          </div>
-        </div>
-        <div class="header-actions">
-          <button class="btn btn-secondary" onclick="loadAds()" ${state.syncing ? 'disabled' : ''} style="font-size:13px;padding:10px 14px">↻ Sync</button>
-          <button class="btn btn-primary" onclick="state.modal='add';render()" style="font-size:13px;padding:10px 22px">+ Add Ad</button>
-        </div>
-      </div>
-      <div class="filters">
-        <div class="search-wrap">
-          <span class="search-icon">⌕</span>
-          <input class="input" id="search-input" value="${state.search}" placeholder="Search ads, tags, notes..." oninput="state.search=this.value;render()">
-        </div>
-        <div class="platform-filters">
-          ${['All', ...PLATFORMS].map(p => `
-            <button class="platform-btn ${state.filterPlatform === p ? 'active' : ''}"
-              style="${state.filterPlatform === p ? 'border-color:' + (p === 'All' ? '#fff' : PLATFORM_COLORS[p]) + ';color:' + (p === 'All' ? '#fff' : PLATFORM_COLORS[p]) + ';background:' + (p === 'All' ? 'rgba(255,255,255,0.08)' : PLATFORM_COLORS[p] + '15') : ''}"
-              onclick="state.filterPlatform='${p}';render()">
-              ${p}
-            </button>
-          `).join('')}
-        </div>
-        ${clients.length > 1 ? `
-          <select class="input" style="width:auto;font-size:12px;font-weight:600;padding:7px 12px" onchange="state.filterClient=this.value;render()">
-            ${clients.map(c => '<option value="' + c + '"' + (state.filterClient === c ? ' selected' : '') + '>' + (c === 'All' ? 'All Clients' : c) + '</option>').join('')}
-          </select>
-        ` : ''}
-        <select class="input" style="width:auto;font-size:12px;font-weight:600;padding:7px 12px;margin-left:auto" onchange="state.sortBy=this.value;render()">
-          <option value="newest"${state.sortBy === 'newest' ? ' selected' : ''}>Newest First</option>
-          <option value="oldest"${state.sortBy === 'oldest' ? ' selected' : ''}>Oldest First</option>
-          <option value="name"${state.sortBy === 'name' ? ' selected' : ''}>A → Z</option>
-        </select>
-      </div>
-    </div>
-  `;
+  return '<div class="header">' +
+    '<div class="header-top">' +
+      '<div>' +
+        '<div class="logo-wrap">' +
+          '<img src="' + LOGO_URL + '" alt="Lean Partners">' +
+          '<h1>SWIPEFILE</h1>' +
+        '</div>' +
+        '<div style="display:flex;gap:12px;align-items:center;margin-top:6px">' +
+          '<span style="font-size:13px;color:var(--text-3);font-weight:500">' + state.ads.length + ' ad' + (state.ads.length !== 1 ? 's' : '') + '</span>' +
+          '<span style="font-size:11px;color:' + (state.syncing ? '#FFC107' : '#4CAF50') + ';font-weight:600">' +
+            '<span class="sync-dot ' + (state.syncing ? 'syncing' : 'active') + '"></span>' +
+            (state.syncing ? 'Syncing...' : 'Connected') +
+          '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="header-actions">' +
+        '<button class="btn btn-secondary" onclick="loadAds()" ' + (state.syncing ? 'disabled' : '') + ' style="font-size:13px;padding:10px 14px">↻ Sync</button>' +
+        '<button class="btn btn-primary" onclick="state.modal=\'add\';render()" style="font-size:13px;padding:10px 22px">+ Add Ad</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="filters">' +
+      '<div class="search-wrap">' +
+        '<span class="search-icon">⌕</span>' +
+        '<input class="input" id="search-input" value="' + state.search + '" placeholder="Search ads, tags, notes..." oninput="state.search=this.value;render()">' +
+      '</div>' +
+      '<div class="filter-pills">' +
+        ['All', 'square', 'portrait', 'vertical'].map(function(f) {
+          var label = f === 'All' ? 'All' : getFormatLabel(f);
+          return '<button class="filter-pill ' + (state.filterFormat === f ? 'active' : '') + '" onclick="state.filterFormat=\'' + f + '\';render()">' + label + '</button>';
+        }).join('') +
+      '</div>' +
+      (clients.length > 1 ?
+        '<select class="input" style="width:auto;font-size:12px;font-weight:600;padding:7px 12px" onchange="state.filterClient=this.value;render()">' +
+          clients.map(function(c) { return '<option value="' + c + '"' + (state.filterClient === c ? ' selected' : '') + '>' + (c === 'All' ? 'All Clients' : c) + '</option>'; }).join('') +
+        '</select>'
+      : '') +
+      '<input type="date" class="date-input" value="' + state.filterDate + '" onchange="state.filterDate=this.value;render()" title="Filter by date">' +
+      (state.filterDate ? '<button class="date-clear" onclick="state.filterDate=\'\';render()">Clear date</button>' : '') +
+      '<select class="input" style="width:auto;font-size:12px;font-weight:600;padding:7px 12px;margin-left:auto" onchange="state.sortBy=this.value;render()">' +
+        '<option value="newest"' + (state.sortBy === 'newest' ? ' selected' : '') + '>Newest First</option>' +
+        '<option value="oldest"' + (state.sortBy === 'oldest' ? ' selected' : '') + '>Oldest First</option>' +
+        '<option value="name"' + (state.sortBy === 'name' ? ' selected' : '') + '>A → Z</option>' +
+      '</select>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderCard(ad) {
-  const color = PLATFORM_COLORS[ad.platform] || PLATFORM_COLORS.Other;
-  const pt = ad.aspectRatio === '9:16' ? '177%' : ad.aspectRatio === '1:1' ? '100%' : '56.25%';
-  const tags = ad.tags || [];
-  return `
-    <div class="card" onclick="openDetail('${ad.id}')">
-      <div class="card-media" style="padding-top:${pt}">
-        ${ad.type === 'video'
-          ? '' + (ad.url.includes('/preview') ? '<iframe src="' + ad.url + '" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none" allow="autoplay" loading="lazy"></iframe>' : '<video src="' + ad.url + '" muted loop playsinline onmouseenter="this.play().catch(function(){})" onmouseleave="this.pause();this.currentTime=0"></video>') + ''
-          : '<img src="' + ad.url + '" alt="' + ad.name + '" onerror="this.style.display=\'none\'">'}
-        <span class="card-badge platform" style="background:${color}">${ad.platform}</span>
-        ${ad.type === 'video' ? '<span class="card-badge type">▶ VIDEO</span>' : ''}
-        ${ad.source === 'drive' ? '<span class="card-badge drive">DRIVE</span>' : ''}
-        <button class="card-delete" onclick="event.stopPropagation();deleteAd('${ad.id}')">✕</button>
-      </div>
-      <div class="card-info">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-          <div class="card-title">${ad.name}</div>
-          <div class="card-date">${formatDate(ad.addedAt)}</div>
-        </div>
-        ${ad.client ? '<div class="card-client">' + ad.client + '</div>' : ''}
-        ${tags.length > 0 ? '<div class="card-tags">' + tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</div>' : ''}
-        ${ad.notes ? '<div class="card-notes">' + (ad.notes.length > 80 ? ad.notes.substring(0, 80) + '…' : ad.notes) + '</div>' : ''}
-      </div>
-    </div>
-  `;
+  var pt = ad.aspectRatio === '9:16' ? '177%' : ad.aspectRatio === '4:5' ? '125%' : ad.aspectRatio === '1:1' ? '100%' : '56.25%';
+  var tags = ad.tags || [];
+  var isPreview = ad.url.includes('/preview');
+  return '<div class="card" onclick="openDetail(\'' + ad.id + '\')">' +
+    '<div class="card-media" style="padding-top:' + pt + '">' +
+      (ad.type === 'video'
+        ? (isPreview
+          ? '<iframe src="' + ad.url + '" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;pointer-events:none" loading="lazy"></iframe>'
+          : '<video src="' + ad.url + '" muted loop playsinline onmouseenter="this.play().catch(function(){})" onmouseleave="this.pause();this.currentTime=0"></video>')
+        : '<img src="' + ad.url + '" alt="' + ad.name + '" onerror="this.style.display=\'none\'">'
+      ) +
+      '<span class="card-badge format">' + getFormatLabel(ad.format) + '</span>' +
+      (ad.type === 'video' ? '<span class="card-badge type">▶ VIDEO</span>' : '') +
+      (ad.source === 'drive' ? '<span class="card-badge drive">DRIVE</span>' : '') +
+      '<button class="card-delete" onclick="event.stopPropagation();deleteAd(\'' + ad.id + '\')">✕</button>' +
+    '</div>' +
+    '<div class="card-info">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">' +
+        '<div class="card-title">' + ad.name + '</div>' +
+        '<div class="card-date">' + formatDate(ad.addedAt) + '</div>' +
+      '</div>' +
+      (ad.client ? '<div class="card-client">' + ad.client + '</div>' : '') +
+      (tags.length > 0 ? '<div class="card-tags">' + tags.map(function(t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div>' : '') +
+      (ad.notes ? '<div class="card-notes">' + (ad.notes.length > 80 ? ad.notes.substring(0, 80) + '…' : ad.notes) + '</div>' : '') +
+    '</div>' +
+  '</div>';
 }
 
 function renderEmpty() {
@@ -385,110 +383,106 @@ function renderEmpty() {
 }
 
 function renderAddModal(clients) {
-  return `
-    <div class="modal-overlay" onclick="state.modal=null;render()">
-      <div class="modal" style="padding:28px;width:480px" onclick="event.stopPropagation()">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-          <h2 style="font-size:18px;font-weight:700">Add to Swipefile</h2>
-          <button class="modal-close" onclick="state.modal=null;render()">✕</button>
-        </div>
-        <div id="dropzone" class="dropzone">
-          <div style="font-size:28px;margin-bottom:8px;opacity:0.3">↑</div>
-          <div style="font-size:13px;color:#666;font-weight:500">Drop image or video here, or click to browse</div>
-          <div style="font-size:11px;color:#555;margin-top:4px">Or paste a URL below</div>
-          <input type="file" id="file-input" accept="image/*,video/*" style="display:none">
-        </div>
-        <div style="display:grid;gap:16px">
-          <div><label class="input-label">Image/Video URL</label><input class="input" id="add-url" placeholder="https://..."></div>
-          <div><label class="input-label">Ad Name</label><input class="input" id="add-name" placeholder="e.g. Fonoa - Tax Compliance Hero"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div><label class="input-label">Type</label><div class="toggle-group"><button class="toggle-btn active" data-type="image" onclick="selectToggle(this,'type')">IMAGE</button><button class="toggle-btn" data-type="video" onclick="selectToggle(this,'type')">VIDEO</button></div></div>
-            <div><label class="input-label">Aspect Ratio</label><div class="toggle-group"><button class="toggle-btn active" data-ratio="16:9" onclick="selectToggle(this,'ratio')">16:9</button><button class="toggle-btn" data-ratio="1:1" onclick="selectToggle(this,'ratio')">1:1</button><button class="toggle-btn" data-ratio="9:16" onclick="selectToggle(this,'ratio')">9:16</button></div></div>
-          </div>
-          <div><label class="input-label">Platform</label><div class="platform-selector" id="platform-selector">${PLATFORMS.map((p, i) => '<button class="platform-opt ' + (i === 0 ? 'active' : '') + '" data-platform="' + p + '" style="' + (i === 0 ? 'border-color:' + PLATFORM_COLORS[p] + ';color:' + PLATFORM_COLORS[p] + ';background:' + PLATFORM_COLORS[p] + '18' : '') + '" onclick="selectPlatform(this)">' + p + '</button>').join('')}</div></div>
-          <div><label class="input-label">Client</label><div style="display:flex;gap:8px"><select class="input" id="add-client" style="flex:1"><option value="">Select client...</option>${clients.filter(c => c !== 'All').map(c => '<option value="' + c + '">' + c + '</option>').join('')}</select><input class="input" id="add-new-client" style="flex:1" placeholder="Or add new..."></div></div>
-          <div><label class="input-label">Tags (comma-separated)</label><input class="input" id="add-tags" placeholder="e.g. UGC, testimonial, hook"></div>
-          <div><label class="input-label">Notes</label><textarea class="input" id="add-notes" placeholder="Why is this ad worth saving?"></textarea></div>
-        </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:24px;padding:13px 0" onclick="submitAdd()">Add to Swipefile</button>
-      </div>
-    </div>
-  `;
+  return '<div class="modal-overlay" onclick="state.modal=null;render()">' +
+    '<div class="modal" style="padding:28px;width:480px" onclick="event.stopPropagation()">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">' +
+        '<h2 style="font-size:18px;font-weight:700">Add to Swipefile</h2>' +
+        '<button class="modal-close" onclick="state.modal=null;render()">✕</button>' +
+      '</div>' +
+      '<div id="dropzone" class="dropzone">' +
+        '<div style="font-size:28px;margin-bottom:8px;opacity:0.3">↑</div>' +
+        '<div style="font-size:13px;color:#666;font-weight:500">Drop image or video here, or click to browse</div>' +
+        '<div style="font-size:11px;color:#555;margin-top:4px">Or paste a URL below</div>' +
+        '<input type="file" id="file-input" accept="image/*,video/*" style="display:none">' +
+      '</div>' +
+      '<div style="display:grid;gap:16px">' +
+        '<div><label class="input-label">Image/Video URL</label><input class="input" id="add-url" placeholder="https://..."></div>' +
+        '<div><label class="input-label">Ad Name</label><input class="input" id="add-name" placeholder="e.g. Fonoa - Tax Compliance Hero"></div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+          '<div><label class="input-label">Type</label><div class="toggle-group"><button class="toggle-btn active" data-type="image" onclick="selectToggle(this,\'type\')">IMAGE</button><button class="toggle-btn" data-type="video" onclick="selectToggle(this,\'type\')">VIDEO</button></div></div>' +
+          '<div><label class="input-label">Format</label><div class="toggle-group"><button class="toggle-btn active" data-format="square" onclick="selectToggle(this,\'format\')">Square</button><button class="toggle-btn" data-format="portrait" onclick="selectToggle(this,\'format\')">Portrait</button><button class="toggle-btn" data-format="vertical" onclick="selectToggle(this,\'format\')">Vertical</button></div></div>' +
+        '</div>' +
+        '<div><label class="input-label">Client</label><div style="display:flex;gap:8px"><select class="input" id="add-client" style="flex:1"><option value="">Select client...</option>' + clients.filter(function(c) { return c !== 'All'; }).map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('') + '</select><input class="input" id="add-new-client" style="flex:1" placeholder="Or add new..."></div></div>' +
+        '<div><label class="input-label">Tags (comma-separated)</label><input class="input" id="add-tags" placeholder="e.g. UGC, testimonial, hook"></div>' +
+        '<div><label class="input-label">Notes</label><textarea class="input" id="add-notes" placeholder="Why is this ad worth saving?"></textarea></div>' +
+      '</div>' +
+      '<button class="btn btn-primary" style="width:100%;margin-top:24px;padding:13px 0" onclick="submitAdd()">Add to Swipefile</button>' +
+    '</div>' +
+  '</div>';
 }
 
 function renderDetailModal() {
-  const ad = state.detailAd;
-  const color = PLATFORM_COLORS[ad.platform] || PLATFORM_COLORS.Other;
-  const tags = ad.tags || [];
-  return `
-    <div class="modal-overlay" onclick="state.modal=null;state.detailAd=null;state.editingDetail=false;render()">
-      <div class="modal" style="width:90%;max-width:700px" onclick="event.stopPropagation()">
-        <div style="position:relative;background:#000">
-          ${ad.type === 'video'
-            ? '' + (ad.url.includes('/preview') ? '<iframe src="' + ad.url + '" style="width:100%;height:50vh;border:none" allow="autoplay; encrypted-media" allowfullscreen></iframe>' : '<video src="' + ad.url + '" controls style="width:100%;max-height:50vh;object-fit:contain"></video>') + ''
-            : '<img src="' + ad.url + '" style="width:100%;max-height:50vh;object-fit:contain" alt="' + ad.name + '">'}
-          <button class="modal-close" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);border-radius:6px;padding:6px 10px;font-size:14px;backdrop-filter:blur(8px);color:#fff" onclick="state.modal=null;state.detailAd=null;state.editingDetail=false;render()">✕</button>
-        </div>
-        <div style="padding:20px 24px 24px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <h3 style="font-size:18px;font-weight:700">${ad.name}</h3>
-              <div style="display:flex;gap:10px;align-items:center;margin-top:6px">
-                <span style="background:${color};border-radius:4px;padding:2px 8px;font-size:11px;color:#fff;font-weight:600">${ad.platform}</span>
-                ${ad.client ? '<span style="font-size:12px;color:var(--text-2)">' + ad.client + '</span>' : ''}
-                <span style="font-size:12px;color:var(--text-3)">${formatDate(ad.addedAt)}</span>
-                ${ad.source === 'drive' ? '<span style="font-size:11px;color:#4CAF50;font-weight:600">DRIVE SYNC</span>' : ''}
-              </div>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="state.editingDetail=!state.editingDetail;render()">${state.editingDetail ? 'Cancel' : 'Edit'}</button>
-              <button class="btn btn-danger" style="padding:6px 14px;font-size:12px" onclick="deleteAd('${ad.id}')">Delete</button>
-            </div>
-          </div>
-          ${state.editingDetail ? `
-            <div style="margin-top:16px">
-              <label class="input-label">Tags</label>
-              <input class="input" id="edit-tags" value="${tags.join(', ')}">
-              <label class="input-label" style="margin-top:12px">Notes</label>
-              <textarea class="input" id="edit-notes">${ad.notes || ''}</textarea>
-              <button class="btn btn-primary" style="margin-top:12px;padding:9px 24px;font-size:13px" onclick="submitEdit('${ad.id}')">Save</button>
-            </div>
-          ` : `
-            ${tags.length > 0 ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">' + tags.map(t => '<span class="tag" style="padding:4px 10px;font-size:12px">' + t + '</span>').join('') + '</div>' : ''}
-            ${ad.notes ? '<p style="font-size:13px;color:var(--text-2);margin-top:14px;line-height:1.7;border-top:1px solid var(--border);padding-top:14px">' + ad.notes + '</p>' : ''}
-          `}
-        </div>
-      </div>
-    </div>
-  `;
+  var ad = state.detailAd;
+  var tags = ad.tags || [];
+  var isPreview = ad.url.includes('/preview');
+  return '<div class="modal-overlay" onclick="state.modal=null;state.detailAd=null;state.editingDetail=false;render()">' +
+    '<div class="modal" style="width:90%;max-width:700px" onclick="event.stopPropagation()">' +
+      '<div style="position:relative;background:#000">' +
+        (ad.type === 'video'
+          ? (isPreview
+            ? '<iframe src="' + ad.url + '" style="width:100%;height:50vh;border:none" allow="autoplay; encrypted-media" allowfullscreen></iframe>'
+            : '<video src="' + ad.url + '" controls style="width:100%;max-height:50vh;object-fit:contain"></video>')
+          : '<img src="' + ad.url + '" style="width:100%;max-height:50vh;object-fit:contain" alt="' + ad.name + '">') +
+        '<button class="modal-close" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.7);border-radius:6px;padding:6px 10px;font-size:14px;backdrop-filter:blur(8px);color:#fff" onclick="state.modal=null;state.detailAd=null;state.editingDetail=false;render()">✕</button>' +
+      '</div>' +
+      '<div style="padding:20px 24px 24px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+          '<div>' +
+            '<h3 style="font-size:18px;font-weight:700">' + ad.name + '</h3>' +
+            '<div style="display:flex;gap:10px;align-items:center;margin-top:6px">' +
+              '<span style="background:rgba(255,255,255,0.1);border-radius:4px;padding:2px 8px;font-size:11px;color:#fff;font-weight:600">' + getFormatLabel(ad.format) + '</span>' +
+              (ad.client ? '<span style="font-size:12px;color:var(--text-2)">' + ad.client + '</span>' : '') +
+              '<span style="font-size:12px;color:var(--text-3)">' + formatDate(ad.addedAt) + '</span>' +
+              (ad.source === 'drive' ? '<span style="font-size:11px;color:#4CAF50;font-weight:600">DRIVE SYNC</span>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:8px">' +
+            '<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px" onclick="state.editingDetail=!state.editingDetail;render()">' + (state.editingDetail ? 'Cancel' : 'Edit') + '</button>' +
+            '<button class="btn btn-danger" style="padding:6px 14px;font-size:12px" onclick="deleteAd(\'' + ad.id + '\')">Delete</button>' +
+          '</div>' +
+        '</div>' +
+        (state.editingDetail
+          ? '<div style="margin-top:16px">' +
+              '<label class="input-label">Tags</label>' +
+              '<input class="input" id="edit-tags" value="' + tags.join(', ') + '">' +
+              '<label class="input-label" style="margin-top:12px">Notes</label>' +
+              '<textarea class="input" id="edit-notes">' + (ad.notes || '') + '</textarea>' +
+              '<button class="btn btn-primary" style="margin-top:12px;padding:9px 24px;font-size:13px" onclick="submitEdit(\'' + ad.id + '\')">Save</button>' +
+            '</div>'
+          : (tags.length > 0 ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">' + tags.map(function(t) { return '<span class="tag" style="padding:4px 10px;font-size:12px">' + t + '</span>'; }).join('') + '</div>' : '') +
+            (ad.notes ? '<p style="font-size:13px;color:var(--text-2);margin-top:14px;line-height:1.7;border-top:1px solid var(--border);padding-top:14px">' + ad.notes + '</p>' : '')
+        ) +
+      '</div>' +
+    '</div>' +
+  '</div>';
 }
 
 // ═══════════════════════════════════════════════════════════
-// EVENT HANDLERS
+// EVENTS
 // ═══════════════════════════════════════════════════════════
 function bindEvents() {
-  const dropzone = document.getElementById('dropzone');
-  const fileInput = document.getElementById('file-input');
+  var dropzone = document.getElementById('dropzone');
+  var fileInput = document.getElementById('file-input');
   if (dropzone && fileInput) {
-    dropzone.addEventListener('click', () => fileInput.click());
-    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('active'); });
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('active'));
-    dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('active'); handleFileSelect(e.dataTransfer.files[0]); });
-    fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+    dropzone.addEventListener('click', function() { fileInput.click(); });
+    dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('active'); });
+    dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('active'); });
+    dropzone.addEventListener('drop', function(e) { e.preventDefault(); dropzone.classList.remove('active'); handleFileSelect(e.dataTransfer.files[0]); });
+    fileInput.addEventListener('change', function(e) { handleFileSelect(e.target.files[0]); });
   }
 }
 
 function handleFileSelect(file) {
   if (!file) return;
-  const isVideo = file.type.startsWith('video/');
-  const nameInput = document.getElementById('add-name');
-  const urlInput = document.getElementById('add-url');
+  var isVideo = file.type.startsWith('video/');
+  var nameInput = document.getElementById('add-name');
+  var urlInput = document.getElementById('add-url');
   if (nameInput && !nameInput.value) nameInput.value = file.name.replace(/\.[^/.]+$/, '');
-  document.querySelectorAll('[data-type]').forEach(b => b.classList.toggle('active', b.dataset.type === (isVideo ? 'video' : 'image')));
-  const reader = new FileReader();
-  reader.onload = (e) => {
+  document.querySelectorAll('[data-type]').forEach(function(b) { b.classList.toggle('active', b.dataset.type === (isVideo ? 'video' : 'image')); });
+  var reader = new FileReader();
+  reader.onload = function(e) {
     if (urlInput) urlInput.value = e.target.result;
-    const dz = document.getElementById('dropzone');
+    var dz = document.getElementById('dropzone');
     if (dz) {
       dz.className = 'dropzone dropzone-preview';
       dz.innerHTML = isVideo
@@ -500,46 +494,37 @@ function handleFileSelect(file) {
 }
 
 function selectToggle(btn, group) {
-  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
-}
-
-function selectPlatform(btn) {
-  document.querySelectorAll('.platform-opt').forEach(b => { b.classList.remove('active'); b.style.borderColor = ''; b.style.color = ''; b.style.background = ''; });
-  btn.classList.add('active');
-  const c = PLATFORM_COLORS[btn.dataset.platform];
-  btn.style.borderColor = c; btn.style.color = c; btn.style.background = c + '18';
 }
 
 function openDetail(id) {
-  state.detailAd = state.ads.find(a => a.id === id);
+  state.detailAd = state.ads.find(function(a) { return a.id === id; });
   state.modal = 'detail';
   state.editingDetail = false;
   render();
 }
 
 function submitAdd() {
-  const url = document.getElementById('add-url')?.value.trim();
-  const name = document.getElementById('add-name')?.value.trim();
+  var url = document.getElementById('add-url')?.value.trim();
+  var name = document.getElementById('add-name')?.value.trim();
   if (!url || !name) return showToast('Name and URL are required', true);
-  const activeType = document.querySelector('[data-type].active')?.dataset.type || 'image';
-  const activeRatio = document.querySelector('[data-ratio].active')?.dataset.ratio || '16:9';
-  const activePlatform = document.querySelector('.platform-opt.active')?.dataset.platform || 'Meta';
-  const client = document.getElementById('add-new-client')?.value.trim() || document.getElementById('add-client')?.value || '';
-  const tags = (document.getElementById('add-tags')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
-  const notes = document.getElementById('add-notes')?.value.trim() || '';
-  addAd({ name, url, type: activeType, platform: activePlatform, client, tags, notes, aspectRatio: activeRatio });
+  var activeType = document.querySelector('[data-type].active')?.dataset.type || 'image';
+  var activeFormat = document.querySelector('[data-format].active')?.dataset.format || 'square';
+  var aspectRatio = formatToAspect(activeFormat);
+  var client = document.getElementById('add-new-client')?.value.trim() || document.getElementById('add-client')?.value || '';
+  var tags = (document.getElementById('add-tags')?.value || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  var notes = document.getElementById('add-notes')?.value.trim() || '';
+  addAd({ name: name, url: url, type: activeType, platform: 'Other', client: client, tags: tags, notes: notes, aspectRatio: aspectRatio });
 }
 
 function submitEdit(id) {
-  const tags = (document.getElementById('edit-tags')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
-  const notes = document.getElementById('edit-notes')?.value.trim() || '';
-  updateAd(id, { tags, notes });
+  var tags = (document.getElementById('edit-tags')?.value || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  var notes = document.getElementById('edit-notes')?.value.trim() || '';
+  updateAd(id, { tags: tags, notes: notes });
 }
 
-// ═══════════════════════════════════════════════════════════
 // INIT
-// ═══════════════════════════════════════════════════════════
 loadAds();
 </script>
 </body>
